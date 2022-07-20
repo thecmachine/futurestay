@@ -46,11 +46,7 @@ class GetUsers extends Command
         $sorted_users = $this->sortUsers($users);
         $usersXML = $this->getXML($sorted_users);
 
-        $this->info(print_r($usersXML));
-       
-        $this->newLine();
-        $this->info("Limit: " . $limit);
-
+        $this->info($usersXML);
 
         return 0;
     }
@@ -61,32 +57,40 @@ class GetUsers extends Command
             $doc->formatOutput = TRUE;
             $node = $doc;
         }
+        
+        try {
+            if (is_array($data)){
+                foreach($data as $var=>$val){
     
-        if (is_array($data)){
-            foreach($data as $var=>$val){
-
-                if (is_numeric($var)){
-                    $this->array2xml($val, $name, $doc, $node);
-                }else{
-                    if (!isset($child)){
-                        $child = $doc->createElement($name);
-                        $node->appendChild($child);
-                    }
-                        $labels = ['root', 'first', 'last', 'phone', 'email', 'country'];
-                        if(!in_array($var, $labels)){
-                            $var = 'user';
+                    if (is_numeric($var)){
+                        $this->array2xml($val, $name, $doc, $node);
+                    }else{
+                        if (!isset($child)){
+                            $child = $doc->createElement($name);
+                            $node->appendChild($child);
                         }
+                            $labels = ['root', 'first', 'last', 'phone', 'email', 'country'];
+                            if(!in_array($var, $labels)){
+                                $var = 'user';
+                            }
+        
+                        $this->array2xml($val, $var, $doc, $child);
+                    }
     
-                    $this->array2xml($val, $var, $doc, $child);
                 }
-
+            }else{
+                $child = $doc->createElement($name);
+                $node->appendChild($child);
+                $textNode = $doc->createTextNode($data);
+                $child->appendChild($textNode);
             }
-        }else{
-            $child = $doc->createElement($name);
+        } catch (Exception $e) {
+            $child = $doc->createElement('error');
             $node->appendChild($child);
-            $textNode = $doc->createTextNode($data);
+            $textNode = $doc->createTextNode('xml cannot be parsed from these names as a valid string');
             $child->appendChild($textNode);
         }
+        
     
         if ($doc==$node) return $doc->saveXML();
         return $doc;
