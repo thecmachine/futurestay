@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use \stdClass;
+use \DOMDocument;
 
 class GetUsers extends Command
 {
@@ -40,7 +42,85 @@ class GetUsers extends Command
         $this->info("Get Users Script Begin");
 
         $limit = $this->argument('limit');
+        $users = $this->getUsers($limit);
+        $sorted_users = $this->sortUsers($users);
+        $usersXML = $this->getXML($sorted_users);
 
+        $this->info(print_r($usersXML));
+       
+        $this->newLine();
+        $this->info("Limit: " . $limit);
+
+
+        return 0;
+    }
+
+    public function array2xml($data, $name='root', &$doc=null, &$node=null){
+        if ($doc==null){
+            $doc = new \DOMDocument('1.0','UTF-8');
+            $doc->formatOutput = TRUE;
+            $node = $doc;
+        }
+    
+        if (is_array($data)){
+            foreach($data as $var=>$val){
+
+                if (is_numeric($var)){
+                    array2xml($val, $name, $doc, $node);
+                }else{
+                    if (!isset($child)){
+                        $child = $doc->createElement($name);
+                        $node->appendChild($child);
+                    }
+    
+                    $this->array2xml($val, $var, $doc, $child);
+                }
+                
+            }
+        }else{
+            $child = $doc->createElement($name);
+            $node->appendChild($child);
+            $textNode = $doc->createTextNode($data);
+            $child->appendChild($textNode);
+        }
+    
+        if ($doc==$node) return $doc->saveXML();
+        return $doc;
+    }//array2xml
+
+    public function getXML($sorted_users)
+    {
+        $xml = $this->array2xml($sorted_users);
+        return $xml;
+    }
+
+    public function sortUsers($users){
+        krsort($users);
+        $sorted_users = $users;
+        return $users;
+    }
+
+    public function getUsers($limit){
+        
+        $users = [];
+        for($i = 0; $i < $limit; $i++)
+        {
+            $user_response = $this->curlUsers();
+            $user = [];
+            $user['first'] = $user_response->results[0]->name->first;
+            $user['last'] = $user_response->results[0]->name->last;
+            $user['phone'] = $user_response->results[0]->phone;
+            $user['email'] = $user_response->results[0]->email;
+            $user['country'] = $user_response->results[0]->location->country;
+
+            $users[$user['last']] =  $user; 
+        }
+
+        return $users;
+    }
+
+    public function curlUsers()
+    {
         $service_url     = 'https://randomuser.me/api/';
         $curl            = curl_init($service_url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -49,26 +129,6 @@ class GetUsers extends Command
         $curl_response   = curl_exec($curl);
         curl_close($curl);
         $json_response    = json_decode($curl_response);
-        // $quotes          = $json_objekat->contents->quotes;
-        // foreach($quotes as $intKey=>$objQuote){
-        //     echo $objQuote->title       . '<br>';
-        //     echo $objQuote->author      . '<br>';
-        //     echo $objQuote->quote       . '<br>';
-        //     echo $objQuote->background  . '<br>';
-        // }
-
-        $this->info(print_r($json_response->results[0]));
-        $this->newLine(2);
-        $this->info($json_response->results[0]->name->first);
-        $this->info($json_response->results[0]->name->last);
-        $this->info($json_response->results[0]->phone);
-        $this->info($json_response->results[0]->email);
-        $this->info($json_response->results[0]->location->country);
-
-        $this->newLine();
-        $this->info("Limit: " . $limit);
-
-
-        return 0;
+        return $json_response;
     }
 }
