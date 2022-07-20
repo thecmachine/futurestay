@@ -66,16 +66,20 @@ class GetUsers extends Command
             foreach($data as $var=>$val){
 
                 if (is_numeric($var)){
-                    array2xml($val, $name, $doc, $node);
+                    $this->array2xml($val, $name, $doc, $node);
                 }else{
                     if (!isset($child)){
                         $child = $doc->createElement($name);
                         $node->appendChild($child);
                     }
+                        $labels = ['root', 'first', 'last', 'phone', 'email', 'country'];
+                        if(!in_array($var, $labels)){
+                            $var = 'user';
+                        }
     
                     $this->array2xml($val, $var, $doc, $child);
                 }
-                
+
             }
         }else{
             $child = $doc->createElement($name);
