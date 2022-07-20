@@ -16,7 +16,9 @@ class UserXmlController extends Controller
     public function index($limit = 10)
     {
 
-        // $limit = $this->argument('limit');
+        if(!is_numeric($limit)){
+            $limit = 10;
+        }
         $users = $this->getUsers($limit);
         $sorted_users = $this->sortUsers($users);
         $usersXML = $this->getXML($sorted_users);
