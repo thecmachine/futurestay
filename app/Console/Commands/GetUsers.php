@@ -39,7 +39,7 @@ class GetUsers extends Command
      */
     public function handle()
     {
-        $this->info("Get Users Script Begin");
+        // $this->info("Get Users Script Begin");
 
         $limit = $this->argument('limit');
         $users = $this->getUsers($limit);
@@ -48,7 +48,7 @@ class GetUsers extends Command
 
         $this->info($usersXML);
 
-        return 0;
+        return $usersXML;
     }
 
     public function array2xml($data, $name='root', &$doc=null, &$node=null){

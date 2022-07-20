@@ -18,4 +18,5 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/users', [UserXmlController::class, 'index']);
+Route::get('/users/{limit?}', [UserXmlController::class, 'index']);
+Route::post('/users/{limit?}', [UserXmlController::class, 'index']);
